@@ -6,7 +6,7 @@ venv/
 dataset/
 
 # AI model files
-*.keras
+# *.keras - tracked with Git LFS
 *.h5
 
 # Python cache
