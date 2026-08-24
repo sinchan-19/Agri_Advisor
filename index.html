@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Agri Advisor</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <!-- NAVIGATION BAR -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            🌱 Agri Advisor
+        </div>
+
+        <div class="nav-links">
+
+            <a href="#home">Home</a>
+
+            <a href="#about">About Us</a>
+
+            <a href="#services">Services</a>
+
+            <a href="#contact">Contact</a>
+
+            <button onclick="openLogin()">
+                Login
+            </button>
+
+        </div>
+
+    </nav>
+
+
+    <!-- HOME / HERO SECTION -->
+
+    <section class="hero" id="home">
+
+        <div class="hero-content">
+
+            <span class="small-title">
+                SMART AGRICULTURE
+            </span>
+
+            <h1>
+                Smart Farming<br>
+                With Agri Advisor
+            </h1>
+
+            <p>
+                Detect maize crop diseases using
+                artificial intelligence and get
+                simple agricultural guidance.
+            </p>
+
+            <div class="hero-buttons">
+
+                <button
+                    class="primary-button"
+                    onclick="openLogin()">
+
+                    🌽 Scan Your Maize
+
+                </button>
+
+                <a
+                    href="#services"
+                    class="secondary-button">
+
+                    Explore Services
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FEATURES -->
+
+    <section class="features">
+
+        <div class="section-heading">
+
+            <span>OUR FEATURES</span>
+
+            <h2>
+                Smart Tools For Farmers
+            </h2>
+
+            <p>
+                Simple technology to help you
+                understand your maize crop.
+            </p>
+
+        </div>
+
+
+        <div class="feature-container">
+
+
+            <div class="feature-card">
+
+                <div class="icon">
+                    📷
+                </div>
+
+                <h3>
+                    Scan Maize
+                </h3>
+
+                <p>
+                    Take a photo of your maize leaf
+                    and check its health.
+                </p>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="icon">
+                    🔍
+                </div>
+
+                <h3>
+                    Disease Detection
+                </h3>
+
+                <p>
+                    Our AI system will identify
+                    possible maize diseases.
+                </p>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="icon">
+                    👨‍🌾
+                </div>
+
+                <h3>
+                    Agricultural Advice
+                </h3>
+
+                <p>
+                    Get useful information and
+                    recommendations for your crop.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ABOUT -->
+
+    <section class="about" id="about">
+
+        <div>
+
+            <span>ABOUT AGRI ADVISOR</span>
+
+            <h2>
+                Technology For Better Farming
+            </h2>
+
+            <p>
+                Agri Advisor is designed to help
+                farmers identify maize crop diseases
+                through image-based analysis.
+            </p>
+
+            <p>
+                Simply scan or upload a maize leaf
+                image and the system will analyze it.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- SERVICES -->
+
+    <section class="services" id="services">
+
+        <div class="section-heading">
+
+            <span>OUR SERVICES</span>
+
+            <h2>
+                Agriculture Assistance
+            </h2>
+
+        </div>
+
+
+        <div class="service-container">
+
+            <div class="service-card">
+
+                🌽
+
+                <h3>
+                    Maize Disease Detection
+                </h3>
+
+                <p>
+                    Identify common maize leaf
+                    diseases using AI.
+                </p>
+
+            </div>
+
+
+            <div class="service-card">
+
+                📸
+
+                <h3>
+                    Image Scanning
+                </h3>
+
+                <p>
+                    Upload or capture a maize
+                    leaf image.
+                </p>
+
+            </div>
+
+
+            <div class="service-card">
+
+                🌱
+
+                <h3>
+                    Crop Guidance
+                </h3>
+
+                <p>
+                    Receive information about
+                    crop health and care.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- CONTACT -->
+
+    <section class="contact" id="contact">
+
+        <h2>
+            Need Agricultural Guidance?
+        </h2>
+
+        <p>
+            Use Agri Advisor to check your maize crop.
+        </p>
+
+        <button
+            class="primary-button"
+            onclick="openLogin()">
+
+            Start Now
+
+        </button>
+
+    </section>
+
+
+    <!-- FOOTER -->
+
+    <footer>
+
+        <h3>🌱 Agri Advisor</h3>
+
+        <p>
+            Smart technology for smarter farming.
+        </p>
+
+        <p>
+            © 2026 Agri Advisor
+        </p>
+
+    </footer>
+
+
+    <!-- LOGIN POPUP -->
+
+    <div class="login-overlay" id="loginOverlay">
+
+        <div class="login-box">
+
+            <button
+                class="close-button"
+                onclick="closeLogin()">
+
+                ×
+
+            </button>
+
+            <h2>Login</h2>
+
+            <p>
+                Welcome back! Please login to continue.
+            </p>
+
+
+            <div class="input-box">
+
+                <input
+                    type="text"
+                    placeholder="User Name"
+                    id="username">
+
+                <span>👤</span>
+
+            </div>
+
+
+            <div class="input-box">
+
+                <input
+                    type="password"
+                    placeholder="Password"
+                    id="password">
+
+                <span
+                    onclick="togglePassword()">
+
+                    👁
+
+                </span>
+
+            </div>
+
+
+            <label class="remember">
+
+                <input type="checkbox">
+
+                Remember me
+
+            </label>
+
+
+            <button
+                class="login-button"
+                onclick="login()">
+
+                Login
+
+            </button>
+
+
+            <p class="signup-text">
+
+                Don't have an account?
+                <a href="#">Signup</a>
+
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
