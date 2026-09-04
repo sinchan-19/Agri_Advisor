@@ -2,19 +2,36 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Agri Advisor Dashboard</title>
 
-    <link rel="stylesheet" href="style.css">
+    <!-- Your existing CSS -->
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
 </head>
+
 
 <body>
 
+    <!-- ============================= -->
+    <!-- HEADER -->
+    <!-- ============================= -->
+
     <h1>🌽 Agri Advisor</h1>
 
-    <h2>Welcome to Agri Advisor</h2>
+    <h2>
+        Welcome to Agri Advisor
+    </h2>
 
     <p>
         AI-based maize disease detection system
@@ -22,11 +39,22 @@
 
     <hr>
 
-    <h2>🌱 Maize Disease Detection</h2>
+
+    <!-- ============================= -->
+    <!-- MAIZE DISEASE DETECTION -->
+    <!-- ============================= -->
+
+    <h2>
+        🌱 Maize Disease Detection
+    </h2>
 
     <p>
-        Upload a maize leaf image to detect disease.
+        Upload a clear maize leaf image
+        to detect possible diseases.
     </p>
+
+
+    <!-- IMAGE UPLOAD -->
 
     <input
         type="file"
@@ -34,11 +62,114 @@
         accept="image/*"
     >
 
-    <br><br>
 
-    <button>
+    <br>
+    <br>
+
+
+    <!-- IMAGE PREVIEW -->
+
+    <img
+        id="imagePreview"
+        src=""
+        alt="Selected maize image"
+        style="
+            display:none;
+            max-width:400px;
+            max-height:300px;
+            margin-top:10px;
+        "
+    >
+
+
+    <br>
+
+
+    <!-- DETECT BUTTON -->
+
+    <button
+        type="button"
+        onclick="detectDisease()"
+    >
         🔍 Detect Disease
     </button>
+
+
+    <br>
+    <br>
+
+
+    <!-- ============================= -->
+    <!-- AI RESULT -->
+    <!-- ============================= -->
+
+    <div id="result">
+
+        <p>
+            AI detection result will appear here.
+        </p>
+
+    </div>
+
+
+    <hr>
+
+
+    <!-- ============================= -->
+    <!-- LOGOUT -->
+    <!-- ============================= -->
+
+    <button
+        type="button"
+        onclick="logout()"
+    >
+        🚪 Logout
+    </button>
+
+
+    <!-- ============================= -->
+    <!-- JAVASCRIPT -->
+    <!-- ============================= -->
+
+    <script src="script.js"></script>
+
+
+    <!-- ============================= -->
+    <!-- IMAGE PREVIEW SCRIPT -->
+    <!-- ============================= -->
+
+    <script>
+
+        const maizeImage =
+            document.getElementById("maizeImage");
+
+        const imagePreview =
+            document.getElementById("imagePreview");
+
+
+        maizeImage.addEventListener(
+            "change",
+            function () {
+
+                const file =
+                    this.files[0];
+
+
+                if (file) {
+
+                    imagePreview.src =
+                        URL.createObjectURL(file);
+
+                    imagePreview.style.display =
+                        "block";
+
+                }
+
+            }
+        );
+
+    </script>
+
 
 </body>
 
