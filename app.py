@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+﻿from flask import Flask, request, jsonify, send_from_directory
 import tensorflow as tf
 import numpy as np
 from pathlib import Path
@@ -23,13 +23,13 @@ BASE_DIR = Path(__file__).resolve().parent
 # =========================================================
 
 # ---------------------------------------------------------
-# MAIZE / NON-MAIZE GATE
+# NEW MAIZE / NON-MAIZE GATE MODEL
 # ---------------------------------------------------------
 
 GATE_MODEL_PATH = (
     BASE_DIR
     / "ai_model"
-    / "maize_gate.keras"
+    / "maize_gate_v2.keras"
 )
 
 
@@ -40,12 +40,12 @@ GATE_MODEL_PATH = (
 DISEASE_MODEL_PATH = (
     BASE_DIR
     / "ai_model"
-    / "maize_disease_model.keras"
+    / "maize_disease_model_best.keras"
 )
 
 
 # ---------------------------------------------------------
-# CLASS FILE
+# DISEASE CLASS FILE
 # ---------------------------------------------------------
 
 CLASS_FILE_PATH = (
@@ -59,38 +59,42 @@ CLASS_FILE_PATH = (
 # SETTINGS
 # =========================================================
 
-# IMPORTANT:
-# Gate model output:
+# IMPORTANT
 #
-# 0 = MAIZE
-# 1 = NOT MAIZE
+# New maize gate dataset:
+#
+# class 0 = maize
+# class 1 = not_maize
 #
 # Therefore:
+#
+# raw gate output = NOT-MAIZE confidence
 # maize confidence = 1 - raw gate output
 #
-# We validated the gate using a 0.50 threshold.
+# We start with 50% while testing the new model.
 #
-# 173 / 173 maize images accepted
-# 113 / 114 non-maize images rejected
-#
+# DO NOT use the old 97% threshold here.
+# =========================================================
+
 MAIZE_GATE_THRESHOLD = 0.50
 
 
-# Disease model image size
+# ---------------------------------------------------------
+# Image sizes
+# ---------------------------------------------------------
+
 DISEASE_IMAGE_SIZE = (224, 224)
 
-
-# Gate image size
 GATE_IMAGE_SIZE = (224, 224)
 
 
 # =========================================================
-# LOAD MAIZE GATE
+# LOAD MAIZE GATE MODEL
 # =========================================================
 
 print()
 print("==============================================")
-print("Loading maize / non-maize gate...")
+print("Loading NEW maize / non-maize gate...")
 print("==============================================")
 
 
@@ -106,11 +110,31 @@ if not GATE_MODEL_PATH.exists():
 
 else:
 
-    maize_gate = tf.keras.models.load_model(
-        GATE_MODEL_PATH
-    )
+    try:
 
-    print("Maize gate loaded successfully.")
+        maize_gate = tf.keras.models.load_model(
+            GATE_MODEL_PATH
+        )
+
+        print(
+            "Maize gate loaded successfully."
+        )
+
+        print(
+            f"Gate model:\n{GATE_MODEL_PATH}"
+        )
+
+    except Exception as e:
+
+        print(
+            "ERROR: Could not load maize gate."
+        )
+
+        print(
+            f"Error: {e}"
+        )
+
+        maize_gate = None
 
 
 # =========================================================
@@ -135,15 +159,35 @@ if not DISEASE_MODEL_PATH.exists():
 
 else:
 
-    disease_model = tf.keras.models.load_model(
-        DISEASE_MODEL_PATH
-    )
+    try:
 
-    print("Disease model loaded successfully.")
+        disease_model = tf.keras.models.load_model(
+            DISEASE_MODEL_PATH
+        )
+
+        print(
+            "Disease model loaded successfully."
+        )
+
+        print(
+            f"Disease model:\n{DISEASE_MODEL_PATH}"
+        )
+
+    except Exception as e:
+
+        print(
+            "ERROR: Could not load disease model."
+        )
+
+        print(
+            f"Error: {e}"
+        )
+
+        disease_model = None
 
 
 # =========================================================
-# LOAD CLASS NAMES
+# LOAD DISEASE CLASS NAMES
 # =========================================================
 
 classes = []
@@ -164,13 +208,6 @@ if CLASS_FILE_PATH.exists():
         ]
 
 
-print()
-print("==============================================")
-print("Disease classes:")
-print(classes)
-print("==============================================")
-
-
 # =========================================================
 # FALLBACK CLASSES
 # =========================================================
@@ -183,6 +220,13 @@ if not classes:
         "healthy",
         "northern_leaf_blight"
     ]
+
+
+print()
+print("==============================================")
+print("Disease classes:")
+print(classes)
+print("==============================================")
 
 
 # =========================================================
@@ -292,8 +336,11 @@ def static_files(filename):
         )
 
     return jsonify({
+
         "success": False,
+
         "message": "File not found."
+
     }), 404
 
 
@@ -304,24 +351,32 @@ def static_files(filename):
 def check_maize_gate(image_array):
 
     """
-    Checks whether the uploaded image is a maize image.
+    Checks whether the uploaded image is maize.
 
-    Gate model output:
+    New gate model:
 
-        0 = MAIZE
-        1 = NOT MAIZE
+        class 0 = MAIZE
+        class 1 = NOT MAIZE
 
     Therefore:
 
-        maize confidence = 1 - gate output
+        raw output = NOT-MAIZE confidence
+        maize confidence = 1 - raw output
 
-    The disease model MUST NOT be called if
-    this check fails.
+    IMPORTANT:
+
+    maize_gate_v2.keras already contains
+    MobileNetV2 preprocess_input() inside
+    the model.
+
+    Therefore this function MUST NOT call
+    preprocess_input() again.
     """
 
-    # -----------------------------------------------------
+
+    # =====================================================
     # CHECK MODEL
-    # -----------------------------------------------------
+    # =====================================================
 
     if maize_gate is None:
 
@@ -341,20 +396,20 @@ def check_maize_gate(image_array):
         }
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # CLEAN IMAGE
-    # -----------------------------------------------------
+    # =====================================================
 
     image_array = np.clip(
         image_array,
         0,
         255
-    ).astype(np.uint8)
+    ).astype(np.float32)
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # RESIZE IMAGE
-    # -----------------------------------------------------
+    # =====================================================
 
     gate_image = tf.image.resize(
         image_array,
@@ -362,28 +417,25 @@ def check_maize_gate(image_array):
     )
 
 
-    # -----------------------------------------------------
-    # NORMALIZE
-    # -----------------------------------------------------
-
+    # =====================================================
     # IMPORTANT:
-    # The maize gate was trained using MobileNetV2
-    # preprocess_input(), so the app must use the
-    # same preprocessing.
+    #
+    # DO NOT CALL:
+    #
+    # tf.keras.applications.mobilenet_v2.preprocess_input()
+    #
+    # The new model already performs preprocessing.
+    # =====================================================
+
     gate_image = tf.cast(
         gate_image,
         tf.float32
     )
 
-    gate_image = (
-        tf.keras.applications.mobilenet_v2
-        .preprocess_input(gate_image)
-    )
 
-
-    # -----------------------------------------------------
+    # =====================================================
     # ADD BATCH DIMENSION
-    # -----------------------------------------------------
+    # =====================================================
 
     gate_image = tf.expand_dims(
         gate_image,
@@ -391,9 +443,9 @@ def check_maize_gate(image_array):
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # PREDICT
-    # -----------------------------------------------------
+    # =====================================================
 
     gate_prediction = maize_gate.predict(
         gate_image,
@@ -401,30 +453,32 @@ def check_maize_gate(image_array):
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # CONVERT OUTPUT TO FLOAT
-    # -----------------------------------------------------
+    # =====================================================
 
     gate_value = float(
         np.squeeze(gate_prediction)
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # CLASS INTERPRETATION
-    # -----------------------------------------------------
+    # =====================================================
 
-    # Class 0 = MAIZE
-    # Class 1 = NOT MAIZE
+    # class 0 = maize
+    # class 1 = not_maize
 
     non_maize_confidence = gate_value
 
-    maize_confidence = 1.0 - non_maize_confidence
+    maize_confidence = (
+        1.0 - non_maize_confidence
+    )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # SAFETY CLAMP
-    # -----------------------------------------------------
+    # =====================================================
 
     maize_confidence = float(
         np.clip(
@@ -444,9 +498,9 @@ def check_maize_gate(image_array):
     )
 
 
-    # -----------------------------------------------------
-    # PERCENTAGE
-    # -----------------------------------------------------
+    # =====================================================
+    # PERCENTAGES
+    # =====================================================
 
     maize_percent = (
         maize_confidence * 100
@@ -457,32 +511,36 @@ def check_maize_gate(image_array):
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # TERMINAL INFORMATION
-    # -----------------------------------------------------
+    # =====================================================
 
     print()
     print("==============================================")
     print("MAIZE GATE RESULT")
     print("==============================================")
 
+
     print(
         f"Raw gate output     : "
         f"{gate_value:.6f}"
     )
 
+
     print(
-        f"Maize Confidence     : "
+        f"Maize Confidence    : "
         f"{maize_percent:.2f}%"
     )
 
+
     print(
-        f"Non-Maize Confidence : "
+        f"Non-Maize Confidence: "
         f"{non_maize_percent:.2f}%"
     )
 
+
     print(
-        f"Required Confidence  : "
+        f"Required Confidence : "
         f"{MAIZE_GATE_THRESHOLD * 100:.2f}%"
     )
 
@@ -494,13 +552,17 @@ def check_maize_gate(image_array):
     if maize_confidence < MAIZE_GATE_THRESHOLD:
 
         print()
-        print("REJECTED - NOT A MAIZE IMAGE")
+        print(
+            "REJECTED - NOT A MAIZE IMAGE"
+        )
 
         print(
             "Disease model will NOT be executed."
         )
 
-        print("==============================================")
+        print(
+            "=============================================="
+        )
 
 
         return {
@@ -511,28 +573,33 @@ def check_maize_gate(image_array):
 
             "maize_confidence": maize_percent,
 
-            "non_maize_confidence": non_maize_percent,
+            "non_maize_confidence": (
+                non_maize_percent
+            ),
 
             "message": (
-                "This is NOT a valid maize image. "
-                "Please upload a clear maize leaf "
-                "or maize crop image."
+                "This is not a correct maize crop image. "
+                "Please upload a clear maize leaf/crop image."
             )
         }
 
 
     # =====================================================
-    # ACCEPT
+    # ACCEPT MAIZE
     # =====================================================
 
     print()
-    print("ACCEPTED - MAIZE IMAGE")
+    print(
+        "ACCEPTED - MAIZE IMAGE"
+    )
 
     print(
         "Disease model can now be executed."
     )
 
-    print("==============================================")
+    print(
+        "=============================================="
+    )
 
 
     return {
@@ -543,14 +610,16 @@ def check_maize_gate(image_array):
 
         "maize_confidence": maize_percent,
 
-        "non_maize_confidence": non_maize_percent,
+        "non_maize_confidence": (
+            non_maize_percent
+        ),
 
         "message": "Valid maize image."
     }
 
 
 # =========================================================
-# CONVERT UPLOADED IMAGE
+# LOAD UPLOADED IMAGE
 # =========================================================
 
 def load_uploaded_image(file):
@@ -574,7 +643,7 @@ def load_uploaded_image(file):
 
 
         # -------------------------------------------------
-        # DECODE IMAGE USING TENSORFLOW
+        # DECODE IMAGE
         # -------------------------------------------------
 
         image_tensor = tf.io.decode_image(
@@ -623,9 +692,16 @@ def predict_disease(image_array):
     """
     Runs the disease model.
 
-    This function should ONLY be called after
+    IMPORTANT:
+
+    This function is called ONLY after
     the maize gate accepts the image.
     """
+
+
+    # =====================================================
+    # CHECK MODEL
+    # =====================================================
 
     if disease_model is None:
 
@@ -639,9 +715,9 @@ def predict_disease(image_array):
         }
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # RESIZE
-    # -----------------------------------------------------
+    # =====================================================
 
     image = tf.image.resize(
         image_array,
@@ -649,9 +725,9 @@ def predict_disease(image_array):
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # CONVERT FLOAT
-    # -----------------------------------------------------
+    # =====================================================
 
     image = tf.cast(
         image,
@@ -659,16 +735,9 @@ def predict_disease(image_array):
     )
 
 
-    # -----------------------------------------------------
-    # NORMALIZE
-    # -----------------------------------------------------
-
-    image = image / 255.0
-
-
-    # -----------------------------------------------------
+    # =====================================================
     # ADD BATCH DIMENSION
-    # -----------------------------------------------------
+    # =====================================================
 
     image = tf.expand_dims(
         image,
@@ -676,9 +745,9 @@ def predict_disease(image_array):
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # RUN DISEASE MODEL
-    # -----------------------------------------------------
+    # =====================================================
 
     prediction = disease_model.predict(
         image,
@@ -686,9 +755,9 @@ def predict_disease(image_array):
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # CONVERT PREDICTION
-    # -----------------------------------------------------
+    # =====================================================
 
     prediction = np.asarray(
         prediction
@@ -705,7 +774,9 @@ def predict_disease(image_array):
 
     if prediction.ndim == 0:
 
-        value = float(prediction)
+        value = float(
+            prediction
+        )
 
 
         if len(classes) == 2:
@@ -720,7 +791,9 @@ def predict_disease(image_array):
 
                 class_index = 0
 
-                confidence = 1.0 - value
+                confidence = (
+                    1.0 - value
+                )
 
         else:
 
@@ -740,14 +813,14 @@ def predict_disease(image_array):
         )
 
 
-        # -------------------------------------------------
-        # CHECK WHETHER VALUES ARE PROBABILITIES
-        # -------------------------------------------------
-
         prediction_sum = np.sum(
             prediction
         )
 
+
+        # -------------------------------------------------
+        # CHECK WHETHER VALUES ARE PROBABILITIES
+        # -------------------------------------------------
 
         if (
             np.any(prediction < 0)
@@ -766,6 +839,7 @@ def predict_disease(image_array):
                 -
                 np.max(prediction)
             )
+
 
             prediction = (
                 exp_prediction
@@ -788,31 +862,34 @@ def predict_disease(image_array):
         )
 
 
-    # -----------------------------------------------------
-    # MAKE SURE CLASS INDEX IS VALID
-    # -----------------------------------------------------
+    # =====================================================
+    # CHECK CLASS INDEX
+    # =====================================================
 
     if class_index >= len(classes):
 
         class_index = 0
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # CLASS NAME
-    # -----------------------------------------------------
+    # =====================================================
 
     class_name = classes[
         class_index
     ]
 
 
-    # -----------------------------------------------------
-    # DISPLAY NAME
-    # -----------------------------------------------------
+    # =====================================================
+    # DISEASE DETAILS
+    # =====================================================
 
     disease_details = DISEASE_INFO.get(
+
         class_name,
+
         {
+
             "name": class_name,
 
             "solution": (
@@ -828,14 +905,18 @@ def predict_disease(image_array):
     )
 
 
-    # -----------------------------------------------------
-    # CONFIDENCE PERCENTAGE
-    # -----------------------------------------------------
+    # =====================================================
+    # CONFIDENCE
+    # =====================================================
 
     confidence_percent = (
         confidence * 100
     )
 
+
+    # =====================================================
+    # RETURN DISEASE RESULT
+    # =====================================================
 
     return {
 
@@ -893,10 +974,13 @@ def predict():
             "message": (
                 "No image file was uploaded."
             )
+
         }), 400
 
 
-    file = request.files["file"]
+    file = request.files[
+        "file"
+    ]
 
 
     # =====================================================
@@ -914,6 +998,7 @@ def predict():
             "message": (
                 "Please select an image."
             )
+
         }), 400
 
 
@@ -938,6 +1023,7 @@ def predict():
                 "Unable to read this image. "
                 "Please upload a valid JPG, JPEG or PNG image."
             )
+
         }), 400
 
 
@@ -948,11 +1034,16 @@ def predict():
 
     # =====================================================
     # STEP 1
+    #
     # MAIZE / NON-MAIZE CHECK
     # =====================================================
 
     print()
-    print("STEP 1: CHECKING WHETHER IMAGE IS MAIZE...")
+
+    print(
+        "STEP 1: "
+        "CHECKING WHETHER IMAGE IS MAIZE..."
+    )
 
 
     gate_result = check_maize_gate(
@@ -975,17 +1066,23 @@ def predict():
     if not gate_result["accepted"]:
 
         print()
-        print("REQUEST STOPPED")
 
         print(
-            "Reason: Image failed maize verification."
+            "REQUEST STOPPED"
+        )
+
+        print(
+            "Reason: "
+            "Image failed maize verification."
         )
 
         print(
             "Disease model was NOT called."
         )
 
-        print("==============================================")
+        print(
+            "=============================================="
+        )
 
 
         return jsonify({
@@ -995,15 +1092,19 @@ def predict():
             "is_maize": False,
 
             "maize_confidence": round(
+
                 gate_result[
                     "maize_confidence"
                 ],
+
                 2
             ),
 
-            "message": gate_result[
-                "message"
-            ]
+            "message": (
+                gate_result[
+                    "message"
+                ]
+            )
 
         }), 200
 
@@ -1015,7 +1116,10 @@ def predict():
     # =====================================================
 
     print()
-    print("STEP 2: MAIZE VERIFIED")
+
+    print(
+        "STEP 2: MAIZE VERIFIED"
+    )
 
     print(
         "Running disease model..."
@@ -1040,15 +1144,19 @@ def predict():
             "is_maize": True,
 
             "maize_confidence": round(
+
                 gate_result[
                     "maize_confidence"
                 ],
+
                 2
             ),
 
-            "message": disease_result[
-                "message"
-            ]
+            "message": (
+                disease_result[
+                    "message"
+                ]
+            )
 
         }), 500
 
@@ -1058,31 +1166,52 @@ def predict():
     # =====================================================
 
     print()
-    print("==============================================")
-    print("FINAL RESULT")
-    print("==============================================")
+
+    print(
+        "=============================================="
+    )
+
+    print(
+        "FINAL RESULT"
+    )
+
+    print(
+        "=============================================="
+    )
 
 
     print(
+
         f"Maize Confidence: "
         f"{gate_result['maize_confidence']:.2f}%"
+
     )
 
 
     print(
+
         f"Disease: "
         f"{disease_result['disease_name']}"
+
     )
 
 
     print(
+
         f"Disease Confidence: "
         f"{disease_result['confidence']:.2f}%"
+
     )
 
 
-    print("==============================================")
+    print(
+        "=============================================="
+    )
 
+
+    # =====================================================
+    # RETURN FINAL JSON
+    # =====================================================
 
     return jsonify({
 
@@ -1091,31 +1220,43 @@ def predict():
         "is_maize": True,
 
         "maize_confidence": round(
+
             gate_result[
                 "maize_confidence"
             ],
+
             2
         ),
 
-        "disease": disease_result[
-            "disease"
-        ],
+        "disease": (
+            disease_result[
+                "disease"
+            ]
+        ),
 
-        "disease_name": disease_result[
-            "disease_name"
-        ],
+        "disease_name": (
+            disease_result[
+                "disease_name"
+            ]
+        ),
 
-        "confidence": disease_result[
-            "confidence"
-        ],
+        "confidence": (
+            disease_result[
+                "confidence"
+            ]
+        ),
 
-        "solution": disease_result[
-            "solution"
-        ],
+        "solution": (
+            disease_result[
+                "solution"
+            ]
+        ),
 
-        "yield": disease_result[
-            "yield"
-        ],
+        "yield": (
+            disease_result[
+                "yield"
+            ]
+        ),
 
         "message": (
             "Maize image verified successfully."
@@ -1149,6 +1290,10 @@ def health():
 
         "maize_threshold": (
             MAIZE_GATE_THRESHOLD * 100
+        ),
+
+        "gate_model": (
+            GATE_MODEL_PATH.name
         )
     })
 
@@ -1160,31 +1305,50 @@ def health():
 if __name__ == "__main__":
 
     print()
-    print("==============================================")
-    print("AGRI ADVISOR")
-    print("MAIZE DISEASE DETECTION")
-    print("==============================================")
+
+    print(
+        "=============================================="
+    )
+
+    print(
+        "AGRI ADVISOR"
+    )
+
+    print(
+        "MAIZE DISEASE DETECTION"
+    )
+
+    print(
+        "=============================================="
+    )
 
 
     print(
+
         f"Maize gate threshold: "
         f"{MAIZE_GATE_THRESHOLD * 100:.0f}%"
+
     )
 
 
     print(
+
         f"Gate model: "
         f"{GATE_MODEL_PATH}"
+
     )
 
 
     print(
+
         f"Disease model: "
         f"{DISEASE_MODEL_PATH}"
+
     )
 
 
     print()
+
     print(
         "Server starting..."
     )
@@ -1195,11 +1359,17 @@ if __name__ == "__main__":
     )
 
 
-    print("==============================================")
+    print(
+        "=============================================="
+    )
 
 
     app.run(
+
         host="127.0.0.1",
+
         port=5000,
+
         debug=False
+
     )
