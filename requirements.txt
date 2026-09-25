@@ -1,0 +1,15 @@
+# Agri Advisor - Python Dependencies
+# Core Web Framework
+Flask>=3.0.0
+
+# Deep Learning & AI
+tensorflow>=2.15.0
+numpy>=1.24.0
+
+# Image Processing
+Pillow>=10.0.0
+
+# Model Evaluation & Metrics (for evaluate_model.py)
+scikit-learn>=1.3.0
+matplotlib>=3.7.0
+

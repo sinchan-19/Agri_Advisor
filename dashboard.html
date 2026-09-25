@@ -1,176 +1,550 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krishi Mitra - Farm Operations & AI Crop Doctor Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .dash-container {
+            max-width: 1540px;
+            margin: 0 auto;
+            padding: 20px 24px 80px;
+            position: relative;
+            z-index: 1;
+        }
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+        .dash-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
 
-    <title>Agri Advisor Dashboard</title>
+        .dash-title-group h1 {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    <!-- Your existing CSS -->
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+        .dash-title-group p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
 
+        .dash-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .recent-table-card {
+            background: var(--bg-surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .recent-table-card h3 {
+            font-family: var(--font-heading);
+            font-size: 17px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: rgba(6, 18, 12, 0.6);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .log-item:hover {
+            border-color: var(--border-hover);
+            background: rgba(10, 26, 18, 0.8);
+        }
+
+        .log-name {
+            font-weight: 700;
+            font-size: 13.5px;
+            color: #ffffff;
+        }
+
+        .log-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .log-badge {
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+        }
+
+        .badge-green {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid #10b981;
+        }
+
+        .badge-amber {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid #f59e0b;
+        }
+
+        .badge-red {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid #ef4444;
+        }
+
+        /* Full-width responsive workspace when bot is floating */
+        .dashboard-main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        @media (max-width: 1080px) {
+            .dashboard-main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
-
 
 <body>
 
-    <!-- ============================= -->
-    <!-- HEADER -->
-    <!-- ============================= -->
+<!-- =====================================================
+     1. REAL-WORLD APMC MANDI LIVE MARKET TICKER
+===================================================== -->
+<div class="mandi-ticker-bar">
+    <span class="mandi-ticker-badge">💰 <span data-i18n="mandi_badge">APMC Mandi Maize Rates</span></span>
+    <div class="mandi-items-track">
+        <div class="mandi-item">
+            <span class="mandi-name">Davanagere:</span>
+            <span class="mandi-price">₹2,380 / Qtl</span>
+            <span class="mandi-trend up">▲ +1.8%</span>
+        </div>
+        <div class="mandi-item">
+            <span class="mandi-name">Chikkaballapur:</span>
+            <span class="mandi-price">₹2,340 / Qtl</span>
+            <span class="mandi-trend up">▲ +0.9%</span>
+        </div>
+        <div class="mandi-item">
+            <span class="mandi-name">Ranebennur:</span>
+            <span class="mandi-price">₹2,410 / Qtl</span>
+            <span class="mandi-trend up">▲ +2.1%</span>
+        </div>
+        <div class="mandi-item">
+            <span class="mandi-name">Kalaburagi:</span>
+            <span class="mandi-price">₹2,290 / Qtl</span>
+            <span class="mandi-trend up">▲ +0.5%</span>
+        </div>
+        <div class="mandi-item">
+            <span class="mandi-name">Indore:</span>
+            <span class="mandi-price">₹2,310 / Qtl</span>
+            <span class="mandi-trend up">▲ +1.2%</span>
+        </div>
+        <div class="mandi-item">
+            <span class="mandi-name">Nizamabad:</span>
+            <span class="mandi-price">₹2,360 / Qtl</span>
+            <span class="mandi-trend up">▲ +1.5%</span>
+        </div>
+    </div>
+    <div class="mandi-msp-box">
+        <strong>Govt MSP:</strong> ₹2,225/Qtl • <span data-i18n="moisture_rule">Standard Moisture: &lt;14%</span>
+    </div>
+</div>
 
-    <h1>🌽 Agri Advisor</h1>
+<!-- =====================================================
+     2. STICKY GLASS HEADER WITH KISAN HELPLINE
+===================================================== -->
+<header class="main-header">
+    <div class="header-container">
+        <a href="/" class="brand">
+            <div class="brand-logo-badge">🌾</div>
+            <div class="brand-text">
+                <h1>Krishi <span>Mitra</span> <span class="brand-badge">OPS</span></h1>
+                <p data-i18n="tagline">Smart Crop Doctor & Precision Farm Assistant</p>
+            </div>
+        </a>
 
-    <h2>
-        Welcome to Agri Advisor
-    </h2>
+        <div class="header-actions">
+            <!-- KISAN EMERGENCY HELPLINE DIRECT DIALER -->
+            <a href="tel:18001801551" class="btn-helpline" title="Call National Kisan Call Center (Free 6 AM - 10 PM)">
+                <span class="helpline-pulse"></span>
+                <span>📞 <strong data-i18n="kisan_call">Kisan Helpline: 1800-180-1551</strong></span>
+            </a>
 
-    <p>
-        AI-based maize disease detection system
-    </p>
+            <!-- TRILINGUAL SELECTOR -->
+            <div class="language-box">
+                <span>🌐</span>
+                <select id="languageSelector">
+                    <option value="en">English</option>
+                    <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                    <option value="hi">हिन्दी (Hindi)</option>
+                </select>
+            </div>
 
-    <hr>
+            <button type="button" onclick="window.print()" class="btn-action-outline">🖨️ <span data-i18n="print_slip">Print Report</span></button>
+        </div>
+    </div>
+</header>
 
-
-    <!-- ============================= -->
-    <!-- MAIZE DISEASE DETECTION -->
-    <!-- ============================= -->
-
-    <h2>
-        🌱 Maize Disease Detection
-    </h2>
-
-    <p>
-        Upload a clear maize leaf image
-        to detect possible diseases.
-    </p>
-
-
-    <!-- IMAGE UPLOAD -->
-
-    <input
-        type="file"
-        id="maizeImage"
-        accept="image/*"
-    >
-
-
-    <br>
-    <br>
-
-
-    <!-- IMAGE PREVIEW -->
-
-    <img
-        id="imagePreview"
-        src=""
-        alt="Selected maize image"
-        style="
-            display:none;
-            max-width:400px;
-            max-height:300px;
-            margin-top:10px;
-        "
-    >
-
-
-    <br>
-
-
-    <!-- DETECT BUTTON -->
-
-    <button
-        type="button"
-        onclick="detectDisease()"
-    >
-        🔍 Detect Disease
-    </button>
-
-
-    <br>
-    <br>
-
-
-    <!-- ============================= -->
-    <!-- AI RESULT -->
-    <!-- ============================= -->
-
-    <div id="result">
-
-        <p>
-            AI detection result will appear here.
-        </p>
-
+<!-- =====================================================
+     3. DASHBOARD WORKSPACE
+===================================================== -->
+<main class="dash-container">
+    <div class="dash-topbar">
+        <div class="dash-title-group">
+            <h1>🌾 <span data-i18n="dash_heading">Farm Operations & AI Crop Doctor</span></h1>
+            <p data-i18n="dash_subheading">Live maize canopy surveillance, micro-lesion Grad-CAM spatial heatmaps, and calibrated 16L knapsack backpack sprayer prescriptions.</p>
+        </div>
+        <div class="dash-actions">
+            <button type="button" onclick="window.openFloatingChat()" class="btn-action-outline" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #ffffff;">
+                🤖 <span data-i18n="open_bot_btn">Open Voice Copilot 🎙️</span>
+            </button>
+        </div>
     </div>
 
+    <!-- METRICS CARDS ROW -->
+    <div class="dashboard-hero-metric-grid">
+        <div class="dash-metric-card">
+            <div class="dash-metric-icon">🌿</div>
+            <div class="dash-metric-info">
+                <h4 data-i18n="metric_health">Canopy Health Score</h4>
+                <div class="value">94.8%</div>
+                <div class="subtext">↑ +2.4% vs last week</div>
+            </div>
+        </div>
 
-    <hr>
+        <div class="dash-metric-card">
+            <div class="dash-metric-icon">⚡</div>
+            <div class="dash-metric-info">
+                <h4 data-i18n="metric_scans">Diagnoses Today</h4>
+                <div class="value">42</div>
+                <div class="subtext">Dual-stage neural gate active</div>
+            </div>
+        </div>
 
+        <div class="dash-metric-card">
+            <div class="dash-metric-icon">🔬</div>
+            <div class="dash-metric-info">
+                <h4 data-i18n="metric_pathogen">Dominant Pathogen</h4>
+                <div class="value">Common Rust</div>
+                <div class="subtext" style="color: #fbbf24;">Moderate humidity alert</div>
+            </div>
+        </div>
 
-    <!-- ============================= -->
-    <!-- LOGOUT -->
-    <!-- ============================= -->
+        <div class="dash-metric-card">
+            <div class="dash-metric-icon">🌤️</div>
+            <div class="dash-metric-info">
+                <h4 data-i18n="metric_window">Fungicide Spray Window</h4>
+                <div class="value">Optimal</div>
+                <div class="subtext">06:30 AM - 09:30 AM</div>
+            </div>
+        </div>
+    </div>
 
-    <button
-        type="button"
-        onclick="logout()"
-    >
-        🚪 Logout
-    </button>
+    <!-- MAIN DASHBOARD LAYOUT (WIDE WORKSPACE) -->
+    <div class="dashboard-main-layout">
 
+        <!-- LEFT COLUMN: LEAF SCANNER, HEATMAP & PRESCRIPTION ENGINE -->
+        <section class="detection-card">
+            <div class="section-heading">
+                <div class="heading-icon">🔬</div>
+                <div>
+                    <h2 data-i18n="upload_title">Maize Leaf Diagnostic Station</h2>
+                    <p data-i18n="upload_subtitle">Select or drag & drop a clear maize leaf or crop image to isolate fungal lesions</p>
+                </div>
+            </div>
 
-    <!-- ============================= -->
-    <!-- JAVASCRIPT -->
-    <!-- ============================= -->
+            <!-- UPLOAD DROP ZONE -->
+            <div id="uploadArea" class="upload-area">
+                <!-- DEFAULT STATE -->
+                <div id="uploadContent" class="upload-content">
+                    <div class="upload-icon-circle">📷</div>
+                    <h3 data-i18n="drag_drop">Drag & drop your leaf image here</h3>
+                    <p class="or-divider" data-i18n="or">or</p>
+                    <label for="imageInput" class="choose-image-button">
+                        🖼️ <span data-i18n="choose_image">Choose Image</span>
+                    </label>
+                    <div class="format-badges">
+                        <span class="format-badge">JPG</span>
+                        <span class="format-badge">PNG</span>
+                        <span class="format-badge">WEBP</span>
+                        <span class="format-badge" data-i18n="max_size">Max: 5MB</span>
+                    </div>
+                </div>
 
-    <script src="script.js"></script>
+                <!-- SELECTED PREVIEW STATE -->
+                <div id="selectedImageContent" class="selected-image-content">
+                    <div class="selected-image-header">
+                        <span class="ready-pill">
+                            <span>✅</span>
+                            <span data-i18n="image_ready">Leaf Image Ready for Diagnosis</span>
+                        </span>
+                        <button type="button" id="removeImageButton" class="image-close-button" title="Remove">✕</button>
+                    </div>
 
+                    <div class="selected-image-wrapper">
+                        <img id="imagePreview" src="" alt="Selected maize leaf">
+                        <div class="scanning-laser-line" id="laserLine"></div>
+                    </div>
 
-    <!-- ============================= -->
-    <!-- IMAGE PREVIEW SCRIPT -->
-    <!-- ============================= -->
+                    <div id="selectedFileName" class="selected-file-name"></div>
 
-    <script>
+                    <div class="image-actions">
+                        <button type="button" id="changeImageButton" class="change-image-button">
+                            🔄 <span data-i18n="change_image">Change Image</span>
+                        </button>
+                        <button type="button" id="removeImageButton2" class="remove-image-button">
+                            🗑️ <span data-i18n="remove_image">Remove</span>
+                        </button>
+                    </div>
+                </div>
 
-        const maizeImage =
-            document.getElementById("maizeImage");
+                <input type="file" id="imageInput" name="file" accept="image/jpeg,image/png,image/webp" hidden>
+            </div>
 
-        const imagePreview =
-            document.getElementById("imagePreview");
+            <!-- DETECT CTA BUTTON -->
+            <button id="detectButton" class="detect-button" disabled>
+                <span>⚡</span>
+                <span id="detectButtonText" data-i18n="run_diagnosis">Run AI Neural Diagnosis</span>
+                <span>→</span>
+            </button>
 
+            <!-- LOADING / SCANNING STATE -->
+            <div id="loadingSection" class="loading-section">
+                <div class="spinner"></div>
+                <p data-i18n="analyzing">Krishi Mitra AI is verifying leaf authenticity and computing Grad-CAM spatial heatmap...</p>
+            </div>
 
-        maizeImage.addEventListener(
-            "change",
-            function () {
+            <!-- DIAGNOSTIC RESULT AREA -->
+            <div id="result" class="result-area"></div>
 
-                const file =
-                    this.files[0];
+            <!-- REAL-WORLD FERTILIZER TOP-DRESSING STAGE GUIDE -->
+            <div class="fertilizer-schedule-card">
+                <h3>🌾 <span data-i18n="fert_title">Maize Growth Stage Nutrition & Top-Dressing Schedule</span></h3>
+                <div class="fert-stages-row">
+                    <div class="fert-stage-box">
+                        <div class="fert-stage-tag" data-i18n="fert_v0_tag">Stage 1: Basal at Sowing</div>
+                        <div class="fert-stage-title" data-i18n="fert_v0_title">DAP + Potash + Zinc</div>
+                        <div class="fert-stage-desc" data-i18n="fert_v0_desc">Apply 50 kg DAP + 25 kg MOP + 10 kg Zinc Sulfate per acre into seed furrow for deep root establishment.</div>
+                    </div>
+                    <div class="fert-stage-box">
+                        <div class="fert-stage-tag" data-i18n="fert_v4_tag">Stage 2: Knee-High (30-35 Days)</div>
+                        <div class="fert-stage-title" data-i18n="fert_v4_title">1st Urea Top-Dressing</div>
+                        <div class="fert-stage-desc" data-i18n="fert_v4_desc">Top-dress 35 kg Urea per acre when plants reach knee height. Weed before fertilizer application for optimal uptake.</div>
+                    </div>
+                    <div class="fert-stage-box">
+                        <div class="fert-stage-tag" data-i18n="fert_v8_tag">Stage 3: Tasseling / Silking (50-55 Days)</div>
+                        <div class="fert-stage-title" data-i18n="fert_v8_title">2nd Urea Top-Dressing</div>
+                        <div class="fert-stage-desc" data-i18n="fert_v8_desc">Apply remaining 30 kg Urea per acre just prior to tassel emergence. Critical irrigation required during cob fill.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
+        <!-- RIGHT COLUMN: RECENT INSPECTION LOGS & WEATHER ACTIONS -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
 
-                if (file) {
+            <!-- RECENT FIELD INSPECTIONS -->
+            <div class="recent-table-card">
+                <h3>📋 <span data-i18n="logs_title">Recent Crop Inspection Logs</span></h3>
 
-                    imagePreview.src =
-                        URL.createObjectURL(file);
+                <div class="log-item">
+                    <div>
+                        <div class="log-name">Sector A - Plot 4 (Hybrid NK6240)</div>
+                        <div class="log-time">Today, 02:45 PM • Automated Gate Verified</div>
+                    </div>
+                    <span class="log-badge badge-green">Healthy (99.8%)</span>
+                </div>
 
-                    imagePreview.style.display =
-                        "block";
+                <div class="log-item">
+                    <div>
+                        <div class="log-name">Sector B - Basin Row 12</div>
+                        <div class="log-time">Today, 11:20 AM • Mancozeb Prescribed</div>
+                    </div>
+                    <span class="log-badge badge-red">Common Rust (94.2%)</span>
+                </div>
 
-                }
+                <div class="log-item">
+                    <div>
+                        <div class="log-name">Sector C - East Terraces</div>
+                        <div class="log-time">Yesterday, 04:15 PM • Tilt 25% EC Sprayed</div>
+                    </div>
+                    <span class="log-badge badge-amber">Northern Leaf Blight (88.6%)</span>
+                </div>
 
-            }
-        );
+                <div class="log-item">
+                    <div>
+                        <div class="log-name">Sector A - Plot 2 (Grain-fill Stage)</div>
+                        <div class="log-time">Yesterday, 10:05 AM • Organic Bio-spray</div>
+                    </div>
+                    <span class="log-badge badge-green">Healthy (100%)</span>
+                </div>
+            </div>
 
-    </script>
+            <!-- RAPID FIELD ADVISORY & SAFETY ALERTS -->
+            <div class="recent-table-card">
+                <h3>⚡ <span data-i18n="rapid_title">Rapid Field Advisory & Weather Alerts</span></h3>
+                <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px; color: var(--text-secondary);">
+                    <div style="background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; padding: 12px 14px; border-radius: 8px;">
+                        <strong style="color: #6ee7b7;">🎒 16L Knapsack Pump Standard:</strong>
+                        <p style="margin-top: 4px;">Mix Mancozeb 75% WP @ 40g per 16L pump or Tilt @ 16mL per 16L pump. Cover 1 acre with ~12.5 pumps.</p>
+                    </div>
 
+                    <div style="background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; padding: 12px 14px; border-radius: 8px;">
+                        <strong style="color: #fbbf24;">🌤️ Spray Window Warning:</strong>
+                        <p style="margin-top: 4px;">Current wind speed: 6 km/h (Safe). Relative humidity: 82%. Best spraying window concludes at 09:30 AM.</p>
+                    </div>
+
+                    <div style="background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; padding: 12px 14px; border-radius: 8px;">
+                        <strong style="color: #93c5fd;">📞 Free Kisan Consultation:</strong>
+                        <p style="margin-top: 4px;">Government agronomists available toll-free at <strong>1800-180-1551</strong> for instant subsidy and seed queries.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BENTO FEATURE MINI-CARDS -->
+            <div class="recent-table-card">
+                <h3>🔬 <span data-i18n="tech_title">Krishi Mitra AI Capabilities</span></h3>
+                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12.5px; color: var(--text-secondary);">
+                    <div style="padding: 10px; background: rgba(8, 22, 14, 0.6); border-radius: 8px;">
+                        <strong style="color: #ffffff;">🛡️ Dual-Stage Verification Gate:</strong>
+                        <p style="color: var(--text-muted); margin-top: 2px;">Filters weeds and non-maize imagery before running multi-class convolutional classification.</p>
+                    </div>
+                    <div style="padding: 10px; background: rgba(8, 22, 14, 0.6); border-radius: 8px;">
+                        <strong style="color: #ffffff;">🌡️ Grad-CAM conv2d_3 Layer:</strong>
+                        <p style="color: var(--text-muted); margin-top: 2px;">Visualizes exact spatial feature activations highlighting fungal pustules.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</main>
+
+<!-- =====================================================
+     4. FLOATING ACTION BUTTON (AI COPILOT SYMBOL)
+===================================================== -->
+<button id="floatingBotButton" class="floating-bot-fab" onclick="window.toggleFloatingChat()" title="Open Krishi Mitra Voice AI Copilot">
+    <div class="fab-ping-ring"></div>
+    <span>🤖</span>
+    <span class="fab-badge">1</span>
+    <span class="fab-tooltip" data-i18n="chat_tooltip">Ask Krishi Mitra Copilot 🎙️ / ಕೃಷಿ ಮಿತ್ರ</span>
+</button>
+
+<!-- =====================================================
+     5. FLOATING CHAT MODAL DRAWER
+===================================================== -->
+<div id="floatingChatDrawer" class="floating-chat-drawer">
+    <div class="drawer-header">
+        <div class="drawer-title-group">
+            <div class="drawer-avatar">🤖</div>
+            <div>
+                <h3 data-i18n="chat_title">Krishi Mitra Voice Copilot</h3>
+                <p><span class="status-dot"></span> <span data-i18n="online">Online • Voice & Text Assistant</span></p>
+            </div>
+        </div>
+        <div class="drawer-controls">
+            <button class="drawer-control-btn" onclick="window.toggleFloatingChat()" title="Minimize">—</button>
+            <button class="drawer-control-btn" onclick="window.closeFloatingChat()" title="Close">✕</button>
+        </div>
+    </div>
+
+    <div class="drawer-body">
+        <!-- MESSAGE THREAD -->
+        <div id="chatMessages" class="chat-messages">
+            <div class="bot-message">
+                <span>🌱</span>
+                <div>
+                    <p data-i18n="chat_welcome"><strong>ನಮಸ್ಕಾರ / Greetings Farmer!</strong> I am Krishi Mitra AI.</p>
+                    <p data-i18n="chat_help">Ask me about maize diseases, 16-liter pump dosages, APMC mandi rates, fertilizer schedule, or tap the microphone 🎙️ to speak!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="drawer-footer">
+        <!-- QUICK QUESTIONS CHIPS -->
+        <div class="quick-questions">
+            <button class="quick-question" data-question="dosage">💊 16L Pump Dosage</button>
+            <button class="quick-question" data-question="prevent">🛡️ Disease Prevention</button>
+            <button class="quick-question" data-question="mandi">💰 Mandi Prices</button>
+            <button class="quick-question" data-question="helpline">📞 Kisan Helpline</button>
+            <button class="quick-question" data-question="fertilizer">🌾 Urea Top-Dressing</button>
+            <button class="quick-question" data-question="safety">🛡️ Spray Safety & PHI</button>
+        </div>
+
+        <!-- CHAT INPUT WITH VOICE MICROPHONE -->
+        <div class="chat-input-area">
+            <button id="micButton" type="button" class="chat-mic-btn" title="Speak to Krishi Mitra (Kannada / Hindi / English)">
+                🎙️
+            </button>
+            <input id="chatInput" type="text" data-i18n-placeholder="chat_placeholder" placeholder="Ask question or tap mic to speak...">
+            <button id="sendChatButton" type="button" class="chat-send-btn" title="Send message">➤</button>
+        </div>
+    </div>
+</div>
+
+<!-- =====================================================
+     6. FOOTER
+===================================================== -->
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-brand">
+            <strong style="font-size: 17px;">🌾 Krishi Mitra (ಕೃಷಿ ಮಿತ್ರ / कृषि मित्र)</strong>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Smart Crop Doctor & Precision Agronomy Advisory Engine</p>
+        </div>
+
+        <div class="footer-pills">
+            <div class="footer-pill">
+                🌱 <strong data-i18n="footer_healthy">Healthy Maize</strong> • <span data-i18n="footer_yield">Better Yields</span>
+            </div>
+            <div class="footer-pill">
+                🌿 <strong data-i18n="footer_smart">Smart Farming</strong> with AI
+            </div>
+            <div class="footer-pill">
+                📞 <strong>Kisan Hotline:</strong> 1800-180-1551
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="script.js"></script>
 
 </body>
-
 </html>
